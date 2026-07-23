@@ -391,6 +391,45 @@ def PlotSingularcurveFromBWithInterpolate(n,LemonObjInstance,color,samplesize):
     ToInterpTheta2=np.linspace(np.pi-(phistar-n/(n+1)*Phistar),np.pi-(phistar-(n+1)/n*Phistar), samplesize)
     InterpThetaPolynomial=np.polynomial.polynomial.Polynomial.fit(theta2,phi2,20,domain=[np.pi-(phistar-n/(n+1)*Phistar),np.pi-(phistar-(n+1)/n*Phistar)])
     plt.plot(InterpThetaPolynomial(ToInterpTheta2),ToInterpTheta2, color, lw=0.1)
+
+def PlotShearPushedSingularcurveFromAWithInterpolate(n,LemonObjInstance,color,samplesize,steps):
+    R = LemonObjInstance.R
+    phistar = LemonObjInstance.phistar
+    Phistar = LemonObjInstance.Phistar
+    b = R * np.cos(Phistar) - np.cos(phistar)
+    # LBobj=LemmonBilliard(phistar,R)
+    PhiL = Phistar - 2 * Phistar / (n + 1.0)
+    Phi1 = np.linspace(PhiL, Phistar, samplesize)
+    theta1 = (Phi1 + Phistar) / (2.0 * n)
+    c1 = 2.0 * (-R * np.sin(theta1) + b * np.sin(Phi1 + theta1))
+    c2 = R ** 2 - 2.0 * b * R * np.cos(Phi1) + b ** 2 - 1
+    L1 = (np.sqrt(np.square(c1) - 4.0 * c2) - c1) / 2.0
+    # print(L1)
+    # print(len(L1))
+    xQ = (L1 * np.cos(Phi1 + theta1) + R * np.sin(Phi1))
+    yQ = (L1 * np.sin(Phi1 + theta1) + b - R * np.cos(Phi1))
+    # print(xQ)
+    # print(xQ[-1]**2+yQ[-1]**2)
+    # print(xQ[0])
+    # print(xQ[-1])
+    # print(np.square(yQ)+np.square(xQ))
+    # print(math.sin(phistar))
+
+    phi2 = np.arcsin(xQ)
+    theta2 = phi2 - (Phi1 + theta1)
+    shearmatrix=np.array([[1,2],[0,1]])
+    [phi2,theta2]=(shearmatrix**steps)@np.array([phi2,theta2])
+    #print([phi2,theta2])
+    ToInterpTheta2 = np.linspace(phistar - (n + 1) / n * Phistar,phistar - n / (n + 1) * Phistar,
+                                 samplesize)
+    # print(ToInterpTheta2)
+    # ToInterpTheta2=np.linspace(np.pi-(phistar-n/(n+1)*Phistar),np.pi-(phistar-(n+1)/n*Phistar), samplesize)
+    InterpThetaPolynomial=np.polynomial.polynomial.Polynomial.fit(theta2,phi2,25,domain=[phistar - (n + 1) / n * Phistar,phistar - n / (n + 1) * Phistar])
+    # print(InterpThetaPolynomial(ToInterpTheta2))
+    # print(ToInterpTheta2)
+    plt.plot(InterpThetaPolynomial(ToInterpTheta2),ToInterpTheta2, color, lw=0.1)
+
+
 def PlotSingularcurveToBWithInterpolate(n,LemonObjInstance,color,samplesize):
     R=LemonObjInstance.R
     phistar = LemonObjInstance.phistar
@@ -484,7 +523,63 @@ def SingularcurveFromAWithInterpolatedCurve(n,LemonObjInstance,samplesize):
     InterpThetaPolynomial = np.polynomial.polynomial.Polynomial.fit(theta2, phi2, 20,domain=[phistar - (n + 1) / n * Phistar,phistar - n / (n + 1) * Phistar])
     return InterpThetaPolynomial
 
+def PlotPushedByShearsSingularityCurveFromCornerA(LemonObjInstance,samplesize,steps):
+    PlotShearPushedSingularcurveFromAWithInterpolate(1,LemonObjInstance,"blue",samplesize,steps)
+    PlotShearPushedSingularcurveFromAWithInterpolate(2, LemonObjInstance, "red", samplesize, steps)
+    PlotShearPushedSingularcurveFromAWithInterpolate(3, LemonObjInstance, "green", samplesize, steps)
+    PlotShearPushedSingularcurveFromAWithInterpolate(4, LemonObjInstance, "purple", samplesize, steps)
+    #PlotBoundaryA0A1NearBWithInterpolate(LemonObjInstance, "yellow", samplesize)
+    phistar=LemonObjInstance.phistar
+    Phistar=LemonObjInstance.Phistar
+    # plt.axvline(x=phistar,color='black',linewidth=0.05)
+    plt.axis('equal')
+    plt.gcf().set_size_inches(2.1, 3.3)
+    plt.ylim(phistar-2.5*Phistar,phistar+0.05*Phistar)
+    # plt.xlim(phistar+2*(steps+1)*phistar - 0.5 * Phistar, phistar + 2*(steps+1)*phistar+ 0.2 * Phistar)
+    plt.xlim(phistar+2*(steps)*phistar- 3.5* Phistar, phistar+2*(steps)*phistar+ 0.1*Phistar)
+    # plt.xlabel(r" $\phi$-axis",fontsize=3)
+    #plt.ylabel(r'$\theta$-axis',fontsize=3)
+    ax=plt.gca()
+    ax.set_ylabel(r" $\theta$-axis",fontsize=3,labelpad =0.5)
+    ax.set_xlabel(r" $\phi$-axis",fontsize=3,labelpad =-0.5)
+    # plt.plot([phistar, phistar + 0.4*Phistar], [phistar, phistar + 0.2*Phistar], linewidth=0.1,color="black")
+    # plt.plot([phistar+2*steps * phistar, phistar], [phistar +2*steps*phistar+2*(steps+1)*Phistar, phistar+Phistar], linewidth=0.1, color="black")
+    plt.plot([phistar + 2 * steps * phistar, phistar + 2 * steps * phistar + 2 * (steps + 1) * Phistar],
+             [phistar, phistar + Phistar], linewidth=0.1,
+             color="black")
+    # plt.plot([phistar,0], [phistar+2*steps * phistar,phistar], linewidth=0.1, color="black")
+    plt.plot([phistar, phistar + 2 * steps * phistar], [0, phistar], linewidth=0.1, color="black")
+    plt.xticks([])
+    plt.yticks([])
+    # plt.text(phistar + 0.03*Phistar, phistar-0.2*Phistar, r"$M^{in}_r$", fontsize=4, color="blue", weight="bold")
+    # plt.text(phistar - 0.35*Phistar,phistar,r"$(\zeta,\zeta)$",fontsize=1.7,color="black",weight="bold")
+    # plt.text(phistar - 0.9*Phistar, phistar-0.49*Phistar, r"$(\zeta,\zeta-(1/2)\varsigma)$", fontsize=1.7, color="blue",weight="bold")
+    # plt.text(phistar - 0.9*Phistar, phistar - 1.9/3.0 * Phistar, r"$(\zeta,\zeta-(2/3)\varsigma)$", fontsize=1.7, color="red",weight="bold")
+    # plt.text(phistar - 0.9*Phistar, phistar - 2.95 / 4.0 * Phistar, r"$(\zeta,\zeta-(3/4)\varsigma)$",
+    #          fontsize=2, color="green",weight="bold")
+    # plt.text(phistar - 0.9 * Phistar, phistar - 4.15/ 5.0 * Phistar, r"$(\zeta,\zeta-(4/5)\varsigma)$",
+    #          fontsize=2, color="purple",weight="bold")
+    # plt.text(phistar - 0.6 * Phistar, phistar - 5.0 / 5.0 * Phistar, r"$(\zeta,\zeta-\varsigma)$",
+    #          fontsize=2, color="black",weight="bold")
 
+    # plt.plot(phistar,phistar, marker=".",color="black",markersize=0.8)
+    # plt.plot(phistar, phistar-1.0/2.0*Phistar, marker=".",markersize=0.5,color="blue")
+    # plt.plot(phistar, phistar -2.0/3.0* Phistar, marker=".",markersize=0.2, color="red")
+    # plt.plot(phistar, phistar - 3.0/4.0*Phistar, marker=".",markersize=0.1, color="green")
+    # plt.plot(phistar, phistar - 4.0/5.0 * Phistar, marker=".",markersize=0.07, color="purple")
+
+    # plt.plot(phistar, phistar-Phistar, marker=".", color="black",markersize=0.2)
+
+    # plt.plot(phistar, phistar - 2.0/1.0 * Phistar, marker=".",markersize=0.5,color="blue")
+    # plt.plot(phistar, phistar - 3.0/2.0 * Phistar, marker=".",markersize=0.2,color="red")
+    # plt.plot(phistar, phistar - 4.0/3.0 * Phistar, marker=".",markersize=0.1,color="green")
+    # plt.plot(phistar, phistar - 5.0/4.0 * Phistar, marker=".",markersize=0.07,color="purple")
+
+    # plt.text(phistar - 0.9*Phistar,phistar-2.0*Phistar,r"$(\zeta,\zeta-2\varsigma)$",fontsize=1.7,color="blue",weight="bold")
+    # plt.text(phistar - 0.9* Phistar, phistar-3.2/2.0*Phistar, r"$(\zeta,\zeta-(3/2)\varsigma)$", fontsize=1.7, color="red",weight="bold")
+    # plt.text(phistar - 0.9* Phistar, phistar - 4.1/3.0 * Phistar, r"$(\zeta,\zeta-(4/3)\varsigma)$", fontsize=1.7, color="green",weight="bold")
+    # plt.text(phistar - 0.9* Phistar, phistar - 4.95/ 4.0 * Phistar, r"$(\zeta,\zeta-(5/4)\varsigma)$",
+    #          fontsize=2, color="purple",weight="bold")
 
 
 def PlotSingularityCurveFromCornerA(LemonObjInstance,samplesize):
@@ -838,11 +933,12 @@ if __name__ == '__main__':
     #PlotBoundaryA0A1NearAWithInterpolate(LBobj, "blue", 500)
     # PlotA0A1BAndCBoundariesNearAWithInterpolate(LBobj, 500)
     # PlotA0A1BAndCBoundariesNearBWithInterpolate(LBobj,500)
-    PlotA0A1BAndCBoundariesNearAWithInterpolate(LBobj, 500)
-    #PlotA0A1BAndCBoundariesNearBWithInterpolate(LBobj,500)
+    # PlotA0A1BAndCBoundariesNearAWithInterpolate(LBobj, 500)
+    # PlotA0A1BAndCBoundariesNearBWithInterpolate(LBobj,500)
     # PlotSingularityCurveFromCornerB(LBobj,500)
     # PlotSingularityCurveToCornerB(LBobj, 500)
     # PlotSingularityCurveFromCornerA(LBobj,500)
+    PlotPushedByShearsSingularityCurveFromCornerA(LBobj,500,2)
     #PlotSingularityCurveToCornerA(LBobj, 500)
 
     # PlotA0A1BAndCBoundariesNearBWithInterpolate(LBobj,500)
